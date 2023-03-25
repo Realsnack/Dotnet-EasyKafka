@@ -10,17 +10,17 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v3
     - name: Setup .NET
-      uses: actions/setup-dotnet@v1
+      uses: actions/setup-dotnet@v3
       with:
-        dotnet-version: 7.0.200
+        dotnet-version: 7.0.x
     - name: Restore dependencies
       run: dotnet restore
       working-directory: ./EasyKafka
     - name: Build
       run: dotnet build --no-restore
-      working-directory: .EasyKafka
+      working-directory: ./EasyKafka
     - name: Test
       run: dotnet test --verbosity normal
       working-directory: ./EasyKafkaTests
