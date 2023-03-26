@@ -7,47 +7,59 @@ using Microsoft.Extensions.Logging;
 
 namespace EasyKafka.Services;
 
-public class ProducerService<T>
+public class ProducerService<T> : IDisposable
 {
-    internal readonly ProducerConfig _config;
-    internal readonly ISchemaRegistryClient _schemaRegistryClient;
-    internal readonly IProducer<string, T> _producer;
-    internal readonly ILogger<ProducerService<T>> _logger;
-    internal readonly string _topic;
-    internal readonly string _producerName;
+    internal ProducerConfig? Config;
+    internal ISchemaRegistryClient? SchemaRegistryClient;
+    private readonly IProducer<string?, T> _producer;
+    private readonly ILogger<ProducerService<T>> _logger;
+    internal string? Topic;
+    internal readonly string ProducerName;
 
-    public ProducerService(IConfiguration configuration, ILogger<ProducerService<T>> logger, string producerName)
+    public ProducerService(IConfiguration configuration, ILogger<ProducerService<T>> logger, string producerName, ProducerConfig? config = null, SchemaRegistryConfig? schemaRegistryConfig = null)
     {
         _logger = logger;
-        _producerName = producerName;
-        _topic = configuration[$"Kafka:Producer:{producerName}:Topic"] ?? throw new ArgumentNullException($"Kafka:Producer:{producerName}:Topic");
-        _logger.LogInformation("Creating kafka producer {producerName} for {topic}", _producerName, _topic);
+        ProducerName = producerName;
+        LoadConfiguration(configuration, producerName, config, schemaRegistryConfig);
+
+        _producer = new ProducerBuilder<string?, T>(Config)
+            .SetValueSerializer(new AvroSerializer<T>(SchemaRegistryClient).AsSyncOverAsync())
+            .Build();
+    }
+
+    internal void LoadConfiguration(IConfiguration configuration, string producerName, ProducerConfig? config = null, SchemaRegistryConfig? schemaRegistryConfig = null)
+    {
+        Topic = configuration[$"Kafka:Producer:{producerName}:Topic"] ?? throw new ArgumentNullException($"Kafka:Producer:{producerName}:Topic");
+        _logger.LogInformation("Creating kafka producer {producerName} for {topic}", ProducerName, Topic);
 
         var kafkaConfigSection = configuration.GetSection($"Kafka:Producer:{producerName}");
         var kafkaBootstrapServers = kafkaConfigSection["BootstrapServers"] ?? throw new ArgumentNullException($"Kafka:Producer:{producerName}:BootstrapServers");
         var kafkaSchemaRegistryUrl = kafkaConfigSection["SchemaRegistryUrl"] ?? throw new ArgumentNullException($"Kafka:Producer:{producerName}:SchemaRegistryUrl");
 
-        _config = new ProducerConfig
+        Config = config ?? new ProducerConfig
         {
             BootstrapServers = kafkaBootstrapServers,
             ClientId = producerName
         };
 
-        var schemaRegistryConfig = new SchemaRegistryConfig
+        schemaRegistryConfig ??= new SchemaRegistryConfig
         {
             Url = kafkaSchemaRegistryUrl
         };
-
-        _schemaRegistryClient = new CachedSchemaRegistryClient(schemaRegistryConfig);
-        _producer = new ProducerBuilder<string, T>(_config)
-            .SetValueSerializer(new AvroSerializer<T>(_schemaRegistryClient).AsSyncOverAsync())
-            .Build();
+        SchemaRegistryClient = new CachedSchemaRegistryClient(schemaRegistryConfig);
     }
 
-    public async Task ProduceAsync(string key, T value)
+    public async Task ProduceAsync(string? key, T value)
     {
-        _logger.LogDebug("{producerName }: Producing message to {topic} with key {key}", _producerName, _topic,
+        _logger.LogInformation("{producerName}: Producing message to {topic} with key {key}", ProducerName, Topic,
             key ?? "null");
-        await _producer.ProduceAsync(_topic, new Message<string, T> { Key = key, Value = value });
+        await _producer.ProduceAsync(Topic, new Message<string?, T> { Key = key, Value = value });
+    }
+    
+    public void Dispose()
+    {
+        _producer.Dispose();
+        SchemaRegistryClient?.Dispose();
+        GC.SuppressFinalize(this);
     }
 }
