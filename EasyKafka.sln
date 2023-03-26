@@ -7,6 +7,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EasyKafka", "EasyKafka\Easy
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EasyKafkaTests", "EasyKafkaTests\EasyKafkaTests.csproj", "{6C3BDAED-61AB-46DA-832B-56F092DE1903}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EasyKafkaExample", "EasyKafkaExample\EasyKafkaExample.csproj", "{B12498FD-5906-48E3-B4E4-AE51C68D759D}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -24,5 +26,9 @@ Global
 		{6C3BDAED-61AB-46DA-832B-56F092DE1903}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{6C3BDAED-61AB-46DA-832B-56F092DE1903}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{6C3BDAED-61AB-46DA-832B-56F092DE1903}.Release|Any CPU.Build.0 = Release|Any CPU
+		{B12498FD-5906-48E3-B4E4-AE51C68D759D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B12498FD-5906-48E3-B4E4-AE51C68D759D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B12498FD-5906-48E3-B4E4-AE51C68D759D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B12498FD-5906-48E3-B4E4-AE51C68D759D}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal
