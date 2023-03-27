@@ -22,6 +22,14 @@ public class ProducerService<T> : IDisposable
         ProducerName = producerName;
         LoadConfiguration(configuration, producerName, config, schemaRegistryConfig);
 
+        // if T is string, dont set the serializer
+        if (typeof(T) == typeof(string))
+        {
+            _producer = new ProducerBuilder<string?, T>(Config)
+                .Build();
+            return;
+        }
+        
         _producer = new ProducerBuilder<string?, T>(Config)
             .SetValueSerializer(new AvroSerializer<T>(SchemaRegistryClient).AsSyncOverAsync())
             .Build();
@@ -51,10 +59,25 @@ public class ProducerService<T> : IDisposable
 
     public async Task ProduceAsync(string? key, T value)
     {
-        _logger.LogInformation("{producerName}: Producing message to {topic} with key {key}", ProducerName, Topic,
-            key ?? "null");
-        await _producer.ProduceAsync(Topic, new Message<string?, T> { Key = key, Value = value });
+        _logger.LogInformation("{producerName}: Producing message to {topic} with key {key}", ProducerName, Topic, key ?? "null");
+        var message = new Message<string?, T> { Key = key, Value = value };
+        try
+        {
+            var deliveryReport = await _producer.ProduceAsync(Topic, message);
+            _logger.LogInformation("{producerName}: Message produced to {topicPartitionOffset}", ProducerName, deliveryReport.TopicPartitionOffset);
+        }
+        catch (ProduceException<string?, T> ex)
+        {
+            _logger.LogError("{producerName}: Failed to produce message to {topic}: {message}", ProducerName, Topic, ex.Message);
+            throw;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError("{producerName}: An unexpected error occurred: {exceptionMessage}", ProducerName, ex.Message);
+            throw;
+        }
     }
+
     
     public void Dispose()
     {
