@@ -16,7 +16,8 @@ public class ProducerService<T> : IDisposable
     internal readonly string ProducerName;
     internal string? Topic;
 
-    public ProducerService(IConfiguration configuration, ILogger<ProducerService<T>> logger, string producerName, ProducerConfig? config = null, SchemaRegistryConfig? schemaRegistryConfig = null)
+    public ProducerService(IConfiguration configuration, ILogger<ProducerService<T>> logger, string producerName,
+        ProducerConfig? config = null, SchemaRegistryConfig? schemaRegistryConfig = null)
     {
         _logger = logger;
         ProducerName = producerName;
@@ -38,14 +39,19 @@ public class ProducerService<T> : IDisposable
             .Build();
     }
 
-    internal void LoadConfiguration(IConfiguration configuration, string producerName, ProducerConfig? config = null, SchemaRegistryConfig? schemaRegistryConfig = null)
+    internal void LoadConfiguration(IConfiguration configuration, string producerName, ProducerConfig? config = null,
+        SchemaRegistryConfig? schemaRegistryConfig = null)
     {
-        Topic = configuration[$"Kafka:Producer:{producerName}:Topic"] ?? throw new ArgumentNullException($"Kafka:Producer:{producerName}:Topic");
+        Topic = configuration[$"Kafka:Producer:{producerName}:Topic"] ??
+                throw new ArgumentNullException($"Kafka:Producer:{producerName}:Topic");
         _logger.LogInformation("Creating kafka producer {producerName} for {topic}", ProducerName, Topic);
 
         var kafkaConfigSection = configuration.GetSection($"Kafka:Producer:{producerName}");
-        var kafkaBootstrapServers = kafkaConfigSection["BootstrapServers"] ?? throw new ArgumentNullException($"Kafka:Producer:{producerName}:BootstrapServers");
-        var kafkaSchemaRegistryUrl = kafkaConfigSection["SchemaRegistryUrl"] ?? throw new ArgumentNullException($"Kafka:Producer:{producerName}:SchemaRegistryUrl");
+        var kafkaBootstrapServers = kafkaConfigSection["BootstrapServers"] ??
+                                    throw new ArgumentNullException($"Kafka:Producer:{producerName}:BootstrapServers");
+        var kafkaSchemaRegistryUrl = kafkaConfigSection["SchemaRegistryUrl"] ??
+                                     throw new ArgumentNullException(
+                                         $"Kafka:Producer:{producerName}:SchemaRegistryUrl");
 
         Config = config ?? new ProducerConfig
         {
@@ -62,25 +68,29 @@ public class ProducerService<T> : IDisposable
 
     public async Task ProduceAsync(string? key, T value)
     {
-        _logger.LogInformation("{producerName}: Producing message to {topic} with key {key}", ProducerName, Topic, key ?? "null");
+        _logger.LogInformation("{producerName}: Producing message to {topic} with key {key}", ProducerName, Topic,
+            key ?? "null");
         var message = new Message<string?, T> { Key = key, Value = value };
         try
         {
             var deliveryReport = await _producer.ProduceAsync(Topic, message);
-            _logger.LogInformation("{producerName}: Message produced to {topicPartitionOffset}", ProducerName, deliveryReport.TopicPartitionOffset);
+            _logger.LogInformation("{producerName}: Message produced to {topicPartitionOffset}", ProducerName,
+                deliveryReport.TopicPartitionOffset);
         }
         catch (ProduceException<string?, T> ex)
         {
-            _logger.LogError("{producerName}: Failed to produce message to {topic}: {message}", ProducerName, Topic, ex.Message);
+            _logger.LogError("{producerName}: Failed to produce message to {topic}: {message}", ProducerName, Topic,
+                ex.Message);
             throw;
         }
         catch (Exception ex)
         {
-            _logger.LogError("{producerName}: An unexpected error occurred: {exceptionMessage}", ProducerName, ex.Message);
+            _logger.LogError("{producerName}: An unexpected error occurred: {exceptionMessage}", ProducerName,
+                ex.Message);
             throw;
         }
     }
-    
+
     public void Dispose()
     {
         _producer.Dispose();

@@ -1,5 +1,6 @@
 using EasyKafka.Extensions;
 using EasyKafka.Services;
+using EasyKafkaExample.Models;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -11,15 +12,17 @@ builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
 // Two ways to add the producer service
-builder.Services.AddEasyKafkaProducer<string>(producerName: "OtherProducer");
+builder.Services.AddEasyKafkaProducer<Person>(producerName: "PersonProducer");
 builder.Services.AddSingleton<ProducerService<string>>(provider =>
 {
     var logger = provider.GetRequiredService<ILogger<ProducerService<string>>>();
     var configuration = provider.GetRequiredService<IConfiguration>();
-    var producerName = "TestProducer";
+    const string producerName = "TestProducer";
     
     return new ProducerService<string>(configuration, logger, producerName);
 });
+
+
 
 var app = builder.Build();
 
