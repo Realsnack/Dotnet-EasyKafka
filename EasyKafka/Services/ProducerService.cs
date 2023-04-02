@@ -11,26 +11,29 @@ public class ProducerService<T> : IDisposable
 {
     internal ProducerConfig? Config;
     internal ISchemaRegistryClient? SchemaRegistryClient;
-    private readonly IProducer<string?, T> _producer;
+    private IProducer<string?, T> _producer;
     private readonly ILogger<ProducerService<T>> _logger;
-    internal string? Topic;
     internal readonly string ProducerName;
+    internal string? Topic;
 
     public ProducerService(IConfiguration configuration, ILogger<ProducerService<T>> logger, string producerName, ProducerConfig? config = null, SchemaRegistryConfig? schemaRegistryConfig = null)
     {
         _logger = logger;
         ProducerName = producerName;
         LoadConfiguration(configuration, producerName, config, schemaRegistryConfig);
+        _producer = CreateProducer();
+    }
 
+    private IProducer<string?, T> CreateProducer()
+    {
         // if T is string, dont set the serializer
         if (typeof(T) == typeof(string))
         {
-            _producer = new ProducerBuilder<string?, T>(Config)
+            return _producer = new ProducerBuilder<string?, T>(Config)
                 .Build();
-            return;
         }
-        
-        _producer = new ProducerBuilder<string?, T>(Config)
+
+        return _producer = new ProducerBuilder<string?, T>(Config)
             .SetValueSerializer(new AvroSerializer<T>(SchemaRegistryClient).AsSyncOverAsync())
             .Build();
     }
@@ -77,7 +80,6 @@ public class ProducerService<T> : IDisposable
             throw;
         }
     }
-
     
     public void Dispose()
     {
