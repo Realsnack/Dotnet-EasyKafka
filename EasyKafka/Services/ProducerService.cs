@@ -11,7 +11,7 @@ public class ProducerService<T> : IDisposable
 {
     internal ProducerConfig? Config;
     internal ISchemaRegistryClient? SchemaRegistryClient;
-    private IProducer<string?, T> _producer;
+    private readonly IProducer<string?, T> _producer;
     private readonly ILogger<ProducerService<T>> _logger;
     internal readonly string ProducerName;
     internal string? Topic;
@@ -30,11 +30,11 @@ public class ProducerService<T> : IDisposable
         // if T is string, dont set the serializer
         if (typeof(T) == typeof(string))
         {
-            return _producer = new ProducerBuilder<string?, T>(Config)
+            return new ProducerBuilder<string?, T>(Config)
                 .Build();
         }
 
-        return _producer = new ProducerBuilder<string?, T>(Config)
+        return new ProducerBuilder<string?, T>(Config)
             .SetValueSerializer(new AvroSerializer<T>(SchemaRegistryClient).AsSyncOverAsync())
             .Build();
     }

@@ -1,5 +1,6 @@
 using EasyKafka.Extensions;
 using EasyKafka.Services;
+using EasyKafkaExample.Data;
 using EasyKafkaExample.Models;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -22,7 +23,16 @@ builder.Services.AddSingleton<ProducerService<string>>(provider =>
     return new ProducerService<string>(configuration, logger, producerName);
 });
 
-
+// Two ways to add the consumer service
+builder.Services.AddEasyKafkaConsumer<Person>("PersonConsumer", ProcessData<Person>.OnMessageReceived);
+builder.Services.AddHostedService<ConsumerService<string>>(provider =>
+{
+    var logger = provider.GetRequiredService<ILogger<ConsumerService<string>>>();
+    var configuration = provider.GetRequiredService<IConfiguration>();
+    const string consumerName = "TestConsumer";
+    
+    return new ConsumerService<string>(configuration, logger, consumerName, ProcessData<string>.OnMessageReceived);
+});
 
 var app = builder.Build();
 
