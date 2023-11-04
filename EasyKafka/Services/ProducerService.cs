@@ -52,6 +52,14 @@ public class ProducerService<T> : IDisposable
         var kafkaSchemaRegistryUrl = kafkaConfigSection["SchemaRegistryUrl"] ??
                                      throw new ArgumentNullException(
                                          $"Kafka:Producer:{producerName}:SchemaRegistryUrl");
+        if (Topic == String.Empty)
+            throw new ArgumentException($"Kafka:Producer:{producerName}:Topic cannot be empty");
+
+        if (kafkaBootstrapServers == String.Empty)
+            throw new ArgumentException($"Kafka:Producer:{producerName}:BootstrapServers cannot be empty");
+
+        if (kafkaSchemaRegistryUrl == String.Empty)
+            throw new ArgumentException($"Kafka:Producer:{producerName}:SchemaRegistryUrl cannot be empty");
 
         Config = config ?? new ProducerConfig
         {

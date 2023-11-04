@@ -61,7 +61,8 @@ public class ConsumerService<T> : IHostedService
     /// <param name="onMessageReceived">Method to be called when a message is received</param>
     /// <param name="config">Supply own configuration if the default kafka configuration isn't </param>
     /// <param name="schemaRegistryConfig">Supply own configuration if the default schemaRegistry config doesn't provide enough configuration</param>
-    public ConsumerService(IConfiguration configuration, ILogger<ConsumerService<T>> logger, string consumerName,
+    public ConsumerService(IConfiguration configuration, ILogger<ConsumerService<T>> logger,
+        string consumerName,
         Action<Message<string, T>> onMessageReceived,
         ConsumerConfig? config = null, SchemaRegistryConfig? schemaRegistryConfig = null)
     {
@@ -117,7 +118,7 @@ public class ConsumerService<T> : IHostedService
             BootstrapServers = kafkaBootstrapServers,
             GroupId = producerName,
             EnableAutoCommit = false,
-            AutoOffsetReset = AutoOffsetReset.Latest
+            AutoOffsetReset = AutoOffsetReset.Earliest
         };
 
         schemaRegistryConfig ??= new SchemaRegistryConfig
