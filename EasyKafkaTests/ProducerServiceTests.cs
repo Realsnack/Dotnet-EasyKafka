@@ -98,6 +98,63 @@ public class ProducerServiceTests
         Assert.Throws<ArgumentNullException>(() =>
             new ProducerService<string>(configuration, _logger, producerName));
     }
+
+    [Fact]
+    public void Constructor_WhenCalled_EmptyTopicThrowsException()
+    {
+        // Arrange
+        var configuration = Substitute.For<IConfiguration>();
+        var kafkaConfigurationSection = Substitute.For<IConfigurationSection>();
+
+        // Setup configuration section
+        kafkaConfigurationSection["BootstrapServers"].Returns("localhost:9092");
+        kafkaConfigurationSection["SchemaRegistryUrl"].Returns("http://localhost:8081");
+        configuration[$"Kafka:Producer:{producerName}:Topic"].Returns(String.Empty);
+        configuration.GetSection($"Kafka:Producer:{producerName}")
+            .Returns(kafkaConfigurationSection);
+        
+        // Act & Assert
+        Assert.Throws<ArgumentException>(() =>
+            new ProducerService<string>(configuration, _logger, producerName));
+    }
+
+    [Fact]
+    public void Constructor_WhenCalled_EmptyBootstrapServersThrowsException()
+    {
+        // Arrange
+        var configuration = Substitute.For<IConfiguration>();
+        var kafkaConfigurationSection = Substitute.For<IConfigurationSection>();
+
+        // Setup configuration section
+        kafkaConfigurationSection["BootstrapServers"].Returns(String.Empty);
+        kafkaConfigurationSection["SchemaRegistryUrl"].Returns("http://localhost:8081");
+        configuration[$"Kafka:Producer:{producerName}:Topic"].Returns("TestTopic");
+        configuration.GetSection($"Kafka:Producer:{producerName}")
+            .Returns(kafkaConfigurationSection);
+        
+        // Act & Assert
+        Assert.Throws<ArgumentException>(() =>
+            new ProducerService<string>(configuration, _logger, producerName));
+    }
+
+    [Fact]
+    public void Constructor_WhenCalled_EmptySchemaRegistryUrlThrowsException()
+    {
+        // Arrange
+        var configuration = Substitute.For<IConfiguration>();
+        var kafkaConfigurationSection = Substitute.For<IConfigurationSection>();
+
+        // Setup configuration section
+        kafkaConfigurationSection["BootstrapServers"].Returns("localhost:9092");
+        kafkaConfigurationSection["SchemaRegistryUrl"].Returns(String.Empty);
+        configuration[$"Kafka:Producer:{producerName}:Topic"].Returns("TestTopic");
+        configuration.GetSection($"Kafka:Producer:{producerName}")
+            .Returns(kafkaConfigurationSection);
+        
+        // Act & Assert
+        Assert.Throws<ArgumentException>(() =>
+            new ProducerService<string>(configuration, _logger, producerName));
+    }
     #endregion
 
     #region LoadConfiguration
